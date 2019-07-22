@@ -1,23 +1,68 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
 
-import { FaGithubAlt, FaPlus } from 'react-icons/fa';
+import api from '../../services/api';
 
 import { Container, Form, SubmitButton } from './styles';
 
-function Main() {
-  return (
-    <Container>
-      <h1>Repositórios</h1>
+export default class Main extends Component {
+  state = {
+    newRepo: '',
+    repositorioes: [],
+    loading: false,
+  }
 
-      <Form onSubmit={() => {}}>
-        <input type="text" placeholder="Adicionar repositório" />
+  handleInputChange = e => {
+    this.setState({ newRepo: e.target.value });
+  }
 
-        <SubmitButton disabled>
-          <FaPlus color="#FFF" size={14} />
-        </SubmitButton>
-      </Form>
-    </Container>
-  );
+  handleSubmit = async e => {
+    e.preventDefault();
+
+    this.setState({ loading: true });
+
+    const { newRepo, repositorioes } = this.state;
+    const response = await api(`/repos/${newRepo}`);
+
+    const data = {
+      name: response.data.full_name,
+    };
+
+    this.setState({
+      repositorioes: [...repositorioes, data],
+      newRepo: '',
+      loading: false,
+    });
+  }
+
+  render() {
+    const { newRepo, loading } = this.state;
+
+    return (
+      <Container>
+        <h1>
+          <FaGithubAlt />
+          Repositórios
+        </h1>
+
+        <Form onSubmit={this.handleSubmit}>
+          <input
+            type="text"
+            placeholder="Adicionar repositório"
+            value={newRepo}
+            onChange={this.handleInputChange}
+            autoComplete="on"
+          />
+
+          <SubmitButton loading={loading}>
+            {
+              loading
+                ? <FaSpinner />
+                : <FaPlus color="#FFF" size={14} />
+            }
+          </SubmitButton>
+        </Form>
+      </Container>
+    );
+  }
 }
-
-export default Main;
