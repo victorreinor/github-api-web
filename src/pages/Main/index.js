@@ -1,15 +1,33 @@
 import React, { Component } from 'react';
 import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
 
-import { Container, Form, SubmitButton } from './styles';
+import Container from '../../components/Container';
+import { Form, SubmitButton, List } from './styles';
 
 export default class Main extends Component {
   state = {
     newRepo: '',
-    repositorioes: [],
+    repositories: [],
     loading: false,
+  }
+
+  componentDidMount() {
+    const repositories = localStorage.getItem('repositories');
+
+    if (repositories) {
+      this.setState({ repositories: JSON.parse(repositories)})
+    }
+  }
+
+  componentDidUpdate(_, prevState) {
+    const { repositories } = this.state;
+
+    if (prevState.repositories !== repositories) {
+      localStorage.setItem('repositories', JSON.stringify(repositories))
+    }
   }
 
   handleInputChange = e => {
@@ -21,7 +39,7 @@ export default class Main extends Component {
 
     this.setState({ loading: true });
 
-    const { newRepo, repositorioes } = this.state;
+    const { newRepo, repositories } = this.state;
     const response = await api(`/repos/${newRepo}`);
 
     const data = {
@@ -29,14 +47,14 @@ export default class Main extends Component {
     };
 
     this.setState({
-      repositorioes: [...repositorioes, data],
+      repositories: [...repositories, data],
       newRepo: '',
       loading: false,
     });
   }
 
   render() {
-    const { newRepo, loading } = this.state;
+    const { newRepo, loading, repositories } = this.state;
 
     return (
       <Container>
@@ -62,6 +80,15 @@ export default class Main extends Component {
             }
           </SubmitButton>
         </Form>
+
+        <List>
+          {repositories.map(repository => (
+            <li key={repository.name}>
+              <span>{repository.name}</span>
+              <Link to={`/repository/${encodeURIComponent(repository.name)}`}>Detalhes</Link>
+            </li>
+          ))}
+        </List>
       </Container>
     );
   }
